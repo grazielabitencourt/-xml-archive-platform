@@ -1,0 +1,239 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { FileText, Download, Eye, Calendar, Building } from 'lucide-react'
+
+interface Document {
+  id: string
+  fileName: string
+  type: 'nfe' | 'cte'
+  number: string
+  issueDate: string
+  company: string
+  cnpj: string
+  value?: number
+  size: number
+  uploadDate: string
+}
+
+export default function DocumentList() {
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  useEffect(() => {
+    // Simular carregamento de dados
+    const mockData: Document[] = [
+      {
+        id: '1',
+        fileName: 'NFe_12345678901234_001001.xml',
+        type: 'nfe',
+        number: '001001',
+        issueDate: '2024-11-10',
+        company: 'Empresa Exemplo LTDA',
+        cnpj: '12.345.678/0001-90',
+        value: 1500.50,
+        size: 45320,
+        uploadDate: '2024-11-11'
+      },
+      {
+        id: '2',
+        fileName: 'CTe_98765432109876_000123.xml',
+        type: 'cte',
+        number: '000123',
+        issueDate: '2024-11-09',
+        company: 'Transportadora ABC',
+        cnpj: '98.765.432/0001-10',
+        size: 32150,
+        uploadDate: '2024-11-11'
+      },
+      {
+        id: '3',
+        fileName: 'NFe_11122233344455_002001.xml',
+        type: 'nfe',
+        number: '002001',
+        issueDate: '2024-11-08',
+        company: 'Comércio XYZ S/A',
+        cnpj: '11.122.233/0001-44',
+        value: 890.75,
+        size: 52800,
+        uploadDate: '2024-11-10'
+      }
+    ]
+
+    setTimeout(() => {
+      setDocuments(mockData)
+      setLoading(false)
+    }, 1000)
+  }, [])
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR')
+  }
+
+  const getTypeLabel = (type: 'nfe' | 'cte') => {
+    return type === 'nfe' ? 'NFe' : 'CTe'
+  }
+
+  const getTypeColor = (type: 'nfe' | 'cte') => {
+    return type === 'nfe' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+  }
+
+  const totalPages = Math.ceil(documents.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentDocuments = documents.slice(startIndex, endIndex)
+
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="border rounded-lg p-4">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Lista de documentos */}
+      <div className="space-y-3">
+        {currentDocuments.map((doc) => (
+          <div key={doc.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3 flex-1">
+                <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                      {doc.fileName}
+                    </h3>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(doc.type)}`}>
+                      {getTypeLabel(doc.type)}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-gray-500">
+                    <div className="flex items-center space-x-1">
+                      <span className="font-medium">Número:</span>
+                      <span>{doc.number}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(doc.issueDate)}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Building className="h-4 w-4" />
+                      <span className="truncate">{doc.company}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <span>CNPJ: {doc.cnpj}</span>
+                    </div>
+                  </div>
+
+                  {doc.value && (
+                    <div className="mt-1 text-sm text-gray-500">
+                      <span className="font-medium">Valor: </span>
+                      <span className="text-green-600 font-medium">
+                        {formatCurrency(doc.value)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="mt-2 flex items-center space-x-4 text-xs text-gray-400">
+                    <span>Tamanho: {formatFileSize(doc.size)}</span>
+                    <span>Upload: {formatDate(doc.uploadDate)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ações */}
+              <div className="flex items-center space-x-2 ml-4">
+                <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+                  <Download className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+          <div className="flex items-center text-sm text-gray-500">
+            Mostrando {startIndex + 1} a {Math.min(endIndex, documents.length)} de {documents.length} documentos
+          </div>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            
+            {[...Array(totalPages)].map((_, i) => {
+              const page = i + 1
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    currentPage === page
+                      ? 'text-blue-600 bg-blue-50 border border-blue-300'
+                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            })}
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Próximo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {documents.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <FileText className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            Nenhum documento encontrado
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Faça o upload de arquivos XML para começar.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
