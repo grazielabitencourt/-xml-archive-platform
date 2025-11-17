@@ -1,10 +1,23 @@
+'use client'
+
 import UploadArea from '@/components/UploadArea'
 import DocumentList from '@/components/DocumentList'
 import SearchBar from '@/components/SearchBar'
 import StorageInfo from '@/components/StorageInfo'
-import { Suspense } from 'react'
+import OfficialLinks from '@/components/OfficialLinks'
+import { Suspense, useState } from 'react'
 
 export default function HomePage() {
+  const [filters, setFilters] = useState({
+    searchTerm: '',
+    selectedType: 'all',
+    selectedYear: 'all'
+  })
+
+  const handleFilterChange = (newFilters: typeof filters) => {
+    setFilters(newFilters)
+  }
+
   return (
     <div className="space-y-8">
       {/* Storage Info */}
@@ -13,6 +26,11 @@ export default function HomePage() {
           Informações de Armazenamento
         </h2>
         <StorageInfo />
+      </div>
+
+      {/* Official Links */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <OfficialLinks />
       </div>
 
       {/* Upload Area */}
@@ -32,11 +50,11 @@ export default function HomePage() {
         </div>
         
         <div className="mb-6">
-          <SearchBar />
+          <SearchBar onFilterChange={handleFilterChange} />
         </div>
 
         <Suspense fallback={<div className="text-center py-8">Carregando...</div>}>
-          <DocumentList />
+          <DocumentList filters={filters} />
         </Suspense>
       </div>
     </div>

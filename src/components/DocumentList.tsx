@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { FileText, Download, Eye, Calendar, Building } from 'lucide-react'
 
 interface Document {
@@ -16,9 +16,18 @@ interface Document {
   uploadDate: string
 }
 
-export default function DocumentList() {
+interface DocumentListProps {
+  filters?: {
+    searchTerm: string
+    selectedType: string
+    selectedYear: string
+  }
+}
+
+export default function DocumentList({ filters }: DocumentListProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
+  const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
@@ -59,6 +68,40 @@ export default function DocumentList() {
         value: 890.75,
         size: 52800,
         uploadDate: '2024-11-10'
+      },
+      {
+        id: '4',
+        fileName: 'CTe_55566677788899_000456.xml',
+        type: 'cte',
+        number: '000456',
+        issueDate: '2023-08-15',
+        company: 'Logística Fast LTDA',
+        cnpj: '55.566.677/0001-88',
+        size: 28900,
+        uploadDate: '2023-08-16'
+      },
+      {
+        id: '5',
+        fileName: 'NFe_99988877766655_003001.xml',
+        type: 'nfe',
+        number: '003001',
+        issueDate: '2023-12-20',
+        company: 'Varejo Online S/A',
+        cnpj: '99.988.877/0001-66',
+        value: 2150.75,
+        size: 41200,
+        uploadDate: '2023-12-21'
+      },
+      {
+        id: '6',
+        fileName: 'CTe_11223344556677_000789.xml',
+        type: 'cte',
+        number: '000789',
+        issueDate: '2022-05-10',
+        company: 'Transportes Sul LTDA',
+        cnpj: '11.223.344/0001-55',
+        size: 35600,
+        uploadDate: '2022-05-11'
       }
     ]
 
@@ -67,6 +110,82 @@ export default function DocumentList() {
       setLoading(false)
     }, 1000)
   }, [])
+
+  // Aplicar filtros aos documentos
+  const filteredDocuments = useMemo(() => {
+    if (!filters) return documents
+
+    return documents.filter(doc => {
+      // Filtro por tipo
+      if (filters.selectedType !== 'all' && doc.type !== filters.selectedType) {
+        return false
+      }
+
+      // Filtro por ano
+      if (filters.selectedYear !== 'all') {
+        const docYear = new Date(doc.issueDate).getFullYear().toString()
+        if (docYear !== filters.selectedYear) {
+          return false
+        }
+      }
+
+      // Filtro por termo de busca
+      if (filters.searchTerm) {
+        const searchLower = filters.searchTerm.toLowerCase()
+        return (
+          doc.number.toLowerCase().includes(searchLower) ||
+          doc.company.toLowerCase().includes(searchLower) ||
+          doc.cnpj.includes(searchLower) ||
+          doc.fileName.toLowerCase().includes(searchLower)
+        )
+      }
+
+      return true
+    })
+  }, [documents, filters])
+
+  // Reset da página quando os filtros mudam
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters])
+
+  // Função para fazer download do documento
+  const handleDownload = async (fileName: string) => {
+    if (downloadingFiles.has(fileName)) return // Evitar downloads duplos
+    
+    try {
+      setDownloadingFiles(prev => new Set(prev).add(fileName))
+      
+      const response = await fetch(`/api/documents/download/${encodeURIComponent(fileName)}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(`Erro ao baixar arquivo: ${errorData.error}`)
+        return
+      }
+
+      // Criar blob e fazer download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+    } catch (error) {
+      console.error('Erro no download:', error)
+      alert('Erro ao baixar o arquivo. Tente novamente.')
+    } finally {
+      setDownloadingFiles(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(fileName)
+        return newSet
+      })
+    }
+  }
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
@@ -95,10 +214,10 @@ export default function DocumentList() {
     return type === 'nfe' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
   }
 
-  const totalPages = Math.ceil(documents.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const currentDocuments = documents.slice(startIndex, endIndex)
+  const currentDocuments = filteredDocuments.slice(startIndex, endIndex)
 
   if (loading) {
     return (
@@ -168,11 +287,27 @@ export default function DocumentList() {
 
               {/* Ações */}
               <div className="flex items-center space-x-2 ml-4">
-                <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+                <button 
+                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  title="Visualizar documento"
+                >
                   <Eye className="h-4 w-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
-                  <Download className="h-4 w-4" />
+                <button 
+                  onClick={() => handleDownload(doc.fileName)}
+                  disabled={downloadingFiles.has(doc.fileName)}
+                  className={`p-2 rounded-full transition-colors ${
+                    downloadingFiles.has(doc.fileName)
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                  }`}
+                  title={downloadingFiles.has(doc.fileName) ? "Baixando..." : "Baixar documento"}
+                >
+                  {downloadingFiles.has(doc.fileName) ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -184,7 +319,12 @@ export default function DocumentList() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-gray-200 pt-4">
           <div className="flex items-center text-sm text-gray-500">
-            Mostrando {startIndex + 1} a {Math.min(endIndex, documents.length)} de {documents.length} documentos
+            Mostrando {startIndex + 1} a {Math.min(endIndex, filteredDocuments.length)} de {filteredDocuments.length} documentos
+            {filters && filteredDocuments.length !== documents.length && (
+              <span className="ml-2 text-blue-600">
+                (filtrado de {documents.length} total)
+              </span>
+            )}
           </div>
           <div className="flex items-center space-x-1">
             <button
@@ -223,14 +363,14 @@ export default function DocumentList() {
         </div>
       )}
 
-      {documents.length === 0 && !loading && (
+      {filteredDocuments.length === 0 && !loading && (
         <div className="text-center py-12">
           <FileText className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
-            Nenhum documento encontrado
+            {documents.length === 0 ? 'Nenhum documento encontrado' : 'Nenhum documento corresponde aos filtros'}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            Faça o upload de arquivos XML para começar.
+            {documents.length === 0 ? 'Faça o upload de arquivos XML para começar.' : 'Tente ajustar os filtros de busca.'}
           </p>
         </div>
       )}
