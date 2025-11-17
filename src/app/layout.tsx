@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import HeaderLinks from '@/components/HeaderLinks'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,9 +27,7 @@ export default function RootLayout({
                     Arquivo XML
                   </h1>
                 </div>
-                <div className="text-sm text-gray-500">
-                  Documentos Fiscais Eletrônicos
-                </div>
+                <HeaderLinks />
               </div>
             </div>
           </header>

@@ -4,6 +4,7 @@ import UploadArea from '@/components/UploadArea'
 import DocumentList from '@/components/DocumentList'
 import SearchBar from '@/components/SearchBar'
 import StorageInfo from '@/components/StorageInfo'
+import OfficialLinks from '@/components/OfficialLinks'
 import { Suspense, useState } from 'react'
 
 export default function HomePage() {
@@ -25,6 +26,11 @@ export default function HomePage() {
           Informações de Armazenamento
         </h2>
         <StorageInfo />
+      </div>
+
+      {/* Official Links */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <OfficialLinks />
       </div>
 
       {/* Upload Area */}
