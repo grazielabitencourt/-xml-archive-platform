@@ -27,6 +27,7 @@ interface DocumentListProps {
 export default function DocumentList({ filters }: DocumentListProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
+  const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
@@ -148,6 +149,44 @@ export default function DocumentList({ filters }: DocumentListProps) {
     setCurrentPage(1)
   }, [filters])
 
+  // Função para fazer download do documento
+  const handleDownload = async (fileName: string) => {
+    if (downloadingFiles.has(fileName)) return // Evitar downloads duplos
+    
+    try {
+      setDownloadingFiles(prev => new Set(prev).add(fileName))
+      
+      const response = await fetch(`/api/documents/download/${encodeURIComponent(fileName)}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(`Erro ao baixar arquivo: ${errorData.error}`)
+        return
+      }
+
+      // Criar blob e fazer download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+    } catch (error) {
+      console.error('Erro no download:', error)
+      alert('Erro ao baixar o arquivo. Tente novamente.')
+    } finally {
+      setDownloadingFiles(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(fileName)
+        return newSet
+      })
+    }
+  }
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -248,11 +287,27 @@ export default function DocumentList({ filters }: DocumentListProps) {
 
               {/* Ações */}
               <div className="flex items-center space-x-2 ml-4">
-                <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+                <button 
+                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  title="Visualizar documento"
+                >
                   <Eye className="h-4 w-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
-                  <Download className="h-4 w-4" />
+                <button 
+                  onClick={() => handleDownload(doc.fileName)}
+                  disabled={downloadingFiles.has(doc.fileName)}
+                  className={`p-2 rounded-full transition-colors ${
+                    downloadingFiles.has(doc.fileName)
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                  }`}
+                  title={downloadingFiles.has(doc.fileName) ? "Baixando..." : "Baixar documento"}
+                >
+                  {downloadingFiles.has(doc.fileName) ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
