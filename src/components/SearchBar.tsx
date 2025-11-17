@@ -1,9 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Filter } from 'lucide-react'
 
-export default function SearchBar() {
+interface SearchBarProps {
+  onFilterChange?: (filters: {
+    searchTerm: string
+    selectedType: string
+    selectedYear: string
+  }) => void
+}
+
+export default function SearchBar({ onFilterChange }: SearchBarProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedType, setSelectedType] = useState('all')
   const [selectedYear, setSelectedYear] = useState('all')
@@ -11,10 +19,18 @@ export default function SearchBar() {
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i)
 
+  // Atualizar filtros em tempo real
+  useEffect(() => {
+    if (onFilterChange) {
+      onFilterChange({ searchTerm, selectedType, selectedYear })
+    }
+  }, [searchTerm, selectedType, selectedYear, onFilterChange])
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // Implementar lógica de busca
-    console.log('Buscar:', { searchTerm, selectedType, selectedYear })
+    if (onFilterChange) {
+      onFilterChange({ searchTerm, selectedType, selectedYear })
+    }
   }
 
   return (
