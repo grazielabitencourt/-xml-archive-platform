@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 
 interface SearchBarProps {
   onFilterChange?: (filters: {
@@ -26,15 +26,18 @@ export default function SearchBar({ onFilterChange }: SearchBarProps) {
     }
   }, [searchTerm, selectedType, selectedYear, onFilterChange])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (onFilterChange) {
-      onFilterChange({ searchTerm, selectedType, selectedYear })
-    }
+  // Verificar se há filtros ativos
+  const hasActiveFilters = searchTerm !== '' || selectedType !== 'all' || selectedYear !== 'all'
+
+  // Limpar todos os filtros
+  const clearFilters = () => {
+    setSearchTerm('')
+    setSelectedType('all')
+    setSelectedYear('all')
   }
 
   return (
-    <form onSubmit={handleSearch} className="space-y-4">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Campo de busca */}
         <div className="flex-1">
@@ -81,15 +84,41 @@ export default function SearchBar({ onFilterChange }: SearchBarProps) {
             </select>
           </div>
 
-          <button
-            type="submit"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filtrar
-          </button>
+          {/* Botão para limpar filtros */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              title="Limpar filtros"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
-    </form>
+
+      {/* Indicador de filtros ativos */}
+      {hasActiveFilters && (
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span>Filtros ativos:</span>
+          {searchTerm && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Busca: "{searchTerm}"
+            </span>
+          )}
+          {selectedType !== 'all' && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Tipo: {selectedType.toUpperCase()}
+            </span>
+          )}
+          {selectedYear !== 'all' && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              Ano: {selectedYear}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
