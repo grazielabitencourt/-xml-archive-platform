@@ -1,10 +1,50 @@
-# XML Archive Platform
+# 🗂️ XML Archive Platform
 
-Uma plataforma moderna de arquivamento digital para documentos fiscais eletrônicos (NFe, CTe) desenvolvida com Next.js.
+Plataforma de arquivamento de documentos fiscais eletrônicos (NFe e CTe) desenvolvida em Next.js.
+
+## � Como Hospedar Gratuitamente
+
+### Opção 1: Vercel (⭐ Recomendado)
+
+**Por que Vercel?**
+- ✅ Criado pela mesma empresa do Next.js
+- ✅ Deploy automático do GitHub
+- ✅ 100GB bandwidth gratuito
+- ✅ Suporte completo a API routes
+- ✅ Preview deployments
+
+**Passos para deploy:**
+1. Acesse [vercel.com](https://vercel.com)
+2. Cadastre-se com sua conta GitHub
+3. Clique em "New Project"
+4. Selecione este repositório
+5. Configure:
+   - Framework: `Next.js`
+   - Build Command: `npm run build`
+6. Deploy! 🚀
+
+### Opção 2: Netlify
+
+**Passos para deploy:**
+1. Acesse [netlify.com](https://netlify.com)
+2. Cadastre-se com GitHub
+3. "New site from Git" → Selecione este repositório
+4. Configure:
+   - Build command: `npm run build`
+   - Publish directory: `.next`
+5. Deploy!
+
+### Opção 3: Railway
+
+**Passos para deploy:**
+1. Acesse [railway.app](https://railway.app)
+2. Conecte com GitHub
+3. Selecione este repositório
+4. Deploy automático!
 
 ## 📋 Sobre o Projeto
 
-Esta aplicação foi desenvolvida para funcionar como um arquivo morto digital, permitindo que empresas armazenem, organizem e pesquisem documentos fiscais eletrônicos dos últimos 10 anos de forma eficiente e segura.
+Plataforma completa para arquivamento digital de documentos fiscais eletrônicos, funcionando como um arquivo morto digital para empresas.
 
 ## ✨ Funcionalidades
 
