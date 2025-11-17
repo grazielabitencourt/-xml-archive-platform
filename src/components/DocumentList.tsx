@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { FileText, Download, Eye, Calendar, Building } from 'lucide-react'
+import DocumentViewer from './DocumentViewer'
 
 interface Document {
   id: string
@@ -29,6 +30,7 @@ export default function DocumentList({ filters }: DocumentListProps) {
   const [loading, setLoading] = useState(true)
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null)
   const itemsPerPage = 10
 
   useEffect(() => {
@@ -288,6 +290,7 @@ export default function DocumentList({ filters }: DocumentListProps) {
               {/* Ações */}
               <div className="flex items-center space-x-2 ml-4">
                 <button 
+                  onClick={() => setSelectedDocumentId(doc.id)}
                   className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                   title="Visualizar documento"
                 >
@@ -374,6 +377,12 @@ export default function DocumentList({ filters }: DocumentListProps) {
           </p>
         </div>
       )}
+
+      {/* Modal do Visualizador de Documentos */}
+      <DocumentViewer 
+        documentId={selectedDocumentId}
+        onClose={() => setSelectedDocumentId(null)}
+      />
     </div>
   )
 }
